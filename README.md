@@ -1,3 +1,9 @@
+# LocalTuya for Comfortbilt
+
+Home Assistant custom integration that allows for local control of Comfortbilt pellet stoves. At least in the US, these stoves do not ship with WiFi and you have to manually order the board from Tuya. See [this thread](https://hearth.com/talk/threads/newbie-help-wifi-possible-for-comfortbilt-pellet-stove.188560) for more info.
+
+This is a fork of a fork of a fork that I bodged together to work with my pellet stove.
+
 ![logo](https://github.com/rospogrigio/localtuya-homeassistant/blob/master/img/logo-small.png)
 
 A Home Assistant custom Integration for local handling of Tuya-based devices.
