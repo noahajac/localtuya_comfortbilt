@@ -183,7 +183,8 @@
                     "preset_set": "Set di preset (opzionale)",
                     "eco_dp": "DP per Eco (opzionale)",
                     "eco_value": "Valore Eco (opzionale)",
-                    "heuristic_action": "Abilita azione euristica (opzionale)"
+                    "heuristic_action": "Abilita azione euristica (opzionale)",
+                    "comfortbilt_alarm_sensor": "Abilita logica stufa a pellet Comfortbilt (opzionale)"
                 }
             }
         }

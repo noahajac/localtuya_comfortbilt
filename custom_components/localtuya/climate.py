@@ -59,6 +59,7 @@ from .const import (
     CONF_HVAC_FAN_MODE_SET,
     CONF_HVAC_SWING_MODE_DP,
     CONF_HVAC_SWING_MODE_SET,
+    CONF_COMFORTBILT_FUNCTIONALITY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -171,9 +172,7 @@ def flow_schema(dps):
         vol.Optional(CONF_HVAC_ACTION_DP): vol.In(dps),
         vol.Optional(CONF_HVAC_ACTION_SET): vol.In(list(HVAC_ACTION_SETS.keys())),
         vol.Optional(CONF_ECO_DP): vol.In(dps),
-        vol.Optional(CONF_ECO_VALUE): vol.In(
-            [True]
-        ),
+        vol.Optional(CONF_ECO_VALUE): str,
         vol.Optional(CONF_PRESET_DP): vol.In(dps),
         vol.Optional(CONF_PRESET_SET): vol.In(list(PRESET_SETS.keys())),
         vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(
@@ -183,6 +182,7 @@ def flow_schema(dps):
             [PRECISION_WHOLE, PRECISION_HALVES, PRECISION_TENTHS]
         ),
         vol.Optional(CONF_HEURISTIC_ACTION): bool,
+        vol.Optional(CONF_COMFORTBILT_FUNCTIONALITY): bool,
     }
 
 
@@ -322,7 +322,8 @@ class LocaltuyaClimate(LocalTuyaEntity, ClimateEntity):
         presets = list(self._conf_preset_set)
         if self._conf_eco_dp:
             presets.append(PRESET_ECO)
-            presets.append(PRESET_NONE)
+            if self._config.get(CONF_COMFORTBILT_FUNCTIONALITY, True):
+                presets.append(PRESET_NONE)
         return presets
 
     @property
@@ -419,15 +420,18 @@ class LocaltuyaClimate(LocalTuyaEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
-        if preset_mode == PRESET_ECO:
-            await self._device.set_dp(self._conf_eco_value, self._conf_eco_dp)
+        if self._config.get(CONF_COMFORTBILT_FUNCTIONALITY, True):
+            if preset_mode == PRESET_ECO:
+                await self._device.set_dp(True, self._conf_eco_dp)
+            else:
+                await self._device.set_dp(False, self._conf_eco_dp)
+        else:
+            if preset_mode == PRESET_ECO:
+                    await self._device.set_dp(self._conf_eco_value, self._conf_eco_dp)
             return
-        elif preset_mode == PRESET_NONE:
-            await self._device.set_dp(False, self._conf_eco_dp)
-            return
-        await self._device.set_dp(
-            self._conf_preset_set[preset_mode], self._conf_preset_dp
-        )
+            await self._device.set_dp(
+                self._conf_preset_set[preset_mode], self._conf_preset_dp
+            )
 
     @property
     def min_temp(self):
@@ -462,6 +466,8 @@ class LocaltuyaClimate(LocalTuyaEntity, ClimateEntity):
                 self.has_config(CONF_ECO_DP)
                 and self.dps_conf(CONF_ECO_DP) == self._conf_eco_value
             ):
+                self._preset_mode = PRESET_ECO
+            elif self._config.get(CONF_COMFORTBILT_FUNCTIONALITY, True) and self.dps_conf(CONF_ECO_DP) == True:
                 self._preset_mode = PRESET_ECO
             else:
                 for preset, value in self._conf_preset_set.items():  # todo remove
