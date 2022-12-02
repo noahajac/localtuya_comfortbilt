@@ -190,7 +190,8 @@
                     "min_value": "Minimum Value",
                     "max_value": "Maximum Value",
                     "step_size": "Minimum increment between numbers",
-                    "is_passive_entity": "Passive entity - requires integration to send initialisation value"
+                    "is_passive_entity": "Passive entity - requires integration to send initialisation value",
+                    "comfortbilt_alarm_sensor": "Enable Comfortbilt pellet stove logic (optional)"
                 }
             }
         }
