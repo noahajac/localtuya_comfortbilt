@@ -82,6 +82,7 @@ CONF_FAN_DPS_TYPE = "fan_dps_type"
 
 # sensor
 CONF_SCALING = "scaling"
+CONF_COMFORTBILT_FUNCTIONALITY = "comfortbilt_alarm_sensor"
 
 # climate
 CONF_TARGET_TEMPERATURE_DP = "target_temperature_dp"
