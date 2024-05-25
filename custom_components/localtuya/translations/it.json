@@ -33,8 +33,7 @@
     "options": {
         "abort": {
             "already_configured": "Il dispositivo è già stato configurato.",
-            "device_success": "Dispositivo {dev_name} {action} con successo.",
-            "no_entities": "Non si possono rimuovere tutte le entities da un device.\nPer rimuovere un device, entrarci nel menu Devices, premere sui 3 punti nel riquadro 'Device info', e premere il pulsante Delete."
+            "device_success": "Dispositivo {dev_name} {action} con successo."
         },
         "error": {
             "authentication_failed": "Autenticazione fallita. Errore:\n{msg}",
@@ -96,7 +95,6 @@
                     "device_id": "ID del dispositivo",
                     "local_key": "Chiave locale",
                     "protocol_version": "Versione del protocollo",
-                    "enable_debug": "Abilita il debugging per questo device (il debug va abilitato anche in configuration.yaml)",
                     "scan_interval": "Intervallo di scansione (secondi, solo quando non si aggiorna automaticamente)",
                     "entities": "Entities (deseleziona un'entity per rimuoverla)"
                 }
@@ -185,30 +183,6 @@
                     "eco_value": "Valore Eco (opzionale)",
                     "heuristic_action": "Abilita azione euristica (opzionale)",
                     "comfortbilt_alarm_sensor": "Abilita logica stufa a pellet Comfortbilt (opzionale)"
-                }
-            }
-        }
-    },
-    "services": {
-        "reload": {
-            "name": "Reload",
-            "description": "Reload localtuya and reconnect to all devices."
-        },
-        "set_dp": {
-            "name": "Set datapoint",
-            "description": "Change the value of a datapoint (DP)",
-            "fields": {
-                "device_id": {
-                    "name": "Device ID",
-                    "description": "Device ID of device to change datapoint value for"
-                },
-                "dp": {
-                    "name": "DP",
-                    "description": "Datapoint index"
-                },
-                "value": {
-                    "name": "Value",
-                    "description": "New value to set"
                 }
             }
         }

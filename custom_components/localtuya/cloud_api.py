@@ -101,10 +101,7 @@ class TuyaCloudApi:
 
     async def async_get_access_token(self):
         """Obtain a valid access token."""
-        try:
-            resp = await self.async_make_request("GET", "/v1.0/token?grant_type=1")
-        except requests.exceptions.ConnectionError:
-            return "Request failed, status ConnectionError"
+        resp = await self.async_make_request("GET", "/v1.0/token?grant_type=1")
 
         if not resp.ok:
             return "Request failed, status " + str(resp.status)

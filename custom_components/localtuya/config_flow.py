@@ -33,9 +33,7 @@ from .const import (
     CONF_ADD_DEVICE,
     CONF_DPS_STRINGS,
     CONF_EDIT_DEVICE,
-    CONF_ENABLE_DEBUG,
     CONF_LOCAL_KEY,
-    CONF_MANUAL_DPS,
     CONF_MODEL,
     CONF_NO_CLOUD,
     CONF_PRODUCT_NAME,
@@ -43,11 +41,11 @@ from .const import (
     CONF_RESET_DPIDS,
     CONF_SETUP_CLOUD,
     CONF_USER_ID,
-    CONF_ENABLE_ADD_ENTITIES,
     DATA_CLOUD,
     DATA_DISCOVERY,
     DOMAIN,
     PLATFORMS,
+    CONF_MANUAL_DPS,
 )
 from .discovery import discover
 
@@ -84,17 +82,26 @@ CLOUD_SETUP_SCHEMA = vol.Schema(
     }
 )
 
+CONFIGURE_DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_FRIENDLY_NAME): str,
+        vol.Required(CONF_LOCAL_KEY): str,
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_DEVICE_ID): str,
+        vol.Required(CONF_PROTOCOL_VERSION, default="3.3"): vol.In(["3.1", "3.3", "3.4"]),
+        vol.Optional(CONF_SCAN_INTERVAL): int,
+        vol.Optional(CONF_MANUAL_DPS): str,
+        vol.Optional(CONF_RESET_DPIDS): str,
+    }
+)
 
 DEVICE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_FRIENDLY_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_DEVICE_ID): cv.string,
         vol.Required(CONF_LOCAL_KEY): cv.string,
-        vol.Required(CONF_PROTOCOL_VERSION, default="3.3"): vol.In(
-            ["3.1", "3.2", "3.3", "3.4"]
-        ),
-        vol.Required(CONF_ENABLE_DEBUG, default=False): bool,
+        vol.Required(CONF_FRIENDLY_NAME): cv.string,
+        vol.Required(CONF_PROTOCOL_VERSION, default="3.3"): vol.In(["3.1", "3.3", "3.4"]),
         vol.Optional(CONF_SCAN_INTERVAL): int,
         vol.Optional(CONF_MANUAL_DPS): cv.string,
         vol.Optional(CONF_RESET_DPIDS): str,
@@ -134,20 +141,16 @@ def options_schema(entities):
     ]
     return vol.Schema(
         {
-            vol.Required(CONF_FRIENDLY_NAME): cv.string,
-            vol.Required(CONF_HOST): cv.string,
-            vol.Required(CONF_LOCAL_KEY): cv.string,
-            vol.Required(CONF_PROTOCOL_VERSION, default="3.3"): vol.In(
-                ["3.1", "3.2", "3.3", "3.4"]
-            ),
-            vol.Required(CONF_ENABLE_DEBUG, default=False): bool,
+            vol.Required(CONF_FRIENDLY_NAME): str,
+            vol.Required(CONF_HOST): str,
+            vol.Required(CONF_LOCAL_KEY): str,
+            vol.Required(CONF_PROTOCOL_VERSION, default="3.3"): vol.In(["3.1", "3.3", "3.4"]),
             vol.Optional(CONF_SCAN_INTERVAL): int,
-            vol.Optional(CONF_MANUAL_DPS): cv.string,
-            vol.Optional(CONF_RESET_DPIDS): cv.string,
+            vol.Optional(CONF_MANUAL_DPS): str,
+            vol.Optional(CONF_RESET_DPIDS): str,
             vol.Required(
                 CONF_ENTITIES, description={"suggested_value": entity_names}
             ): cv.multi_select(entity_names),
-            vol.Required(CONF_ENABLE_ADD_ENTITIES, default=False): bool,
         }
     )
 
@@ -239,13 +242,23 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     reset_ids = None
     try:
-        interface = await pytuya.connect(
-            data[CONF_HOST],
-            data[CONF_DEVICE_ID],
-            data[CONF_LOCAL_KEY],
-            float(data[CONF_PROTOCOL_VERSION]),
-            data[CONF_ENABLE_DEBUG],
-        )
+        if(float(data[CONF_PROTOCOL_VERSION]) == 3.4):
+            module = import_module('custom_components.localtuya.tinytuya.tinytuya')
+            interface = await module.connect(
+                data[CONF_HOST],
+                data[CONF_DEVICE_ID],
+                data[CONF_LOCAL_KEY],
+                float(data[CONF_PROTOCOL_VERSION]),
+                None,
+            )
+        else:
+            interface = await pytuya.connect(
+                data[CONF_HOST],
+                data[CONF_DEVICE_ID],
+                data[CONF_LOCAL_KEY],
+                float(data[CONF_PROTOCOL_VERSION]),
+            )
+
         if CONF_RESET_DPIDS in data:
             reset_ids_str = data[CONF_RESET_DPIDS].split(",")
             reset_ids = []
@@ -258,21 +271,20 @@ async def validate_input(hass: core.HomeAssistant, data):
             )
         try:
             detected_dps = await interface.detect_available_dps()
-        except Exception as ex:
+        except Exception:  # pylint: disable=broad-except
             try:
-                _LOGGER.debug(
-                    "Initial state update failed (%s), trying reset command", ex
-                )
+                _LOGGER.debug("Initial state update failed, trying reset command")
                 if len(reset_ids) > 0:
                     await interface.reset(reset_ids)
                     detected_dps = await interface.detect_available_dps()
-            except Exception as ex:
-                _LOGGER.debug("No DPS able to be detected: %s", ex)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.debug("No DPS able to be detected")
                 detected_dps = {}
 
         # if manual DPs are set, merge these.
         _LOGGER.debug("Detected DPS: %s", detected_dps)
         if CONF_MANUAL_DPS in data:
+
             manual_dps_list = [dps.strip() for dps in data[CONF_MANUAL_DPS].split(",")]
             _LOGGER.debug(
                 "Manual DPS Setting: %s (%s)", data[CONF_MANUAL_DPS], manual_dps_list
@@ -496,8 +508,8 @@ class LocalTuyaOptionsFlowHandler(config_entries.OptionsFlow):
                     errors["base"] = "address_in_use"
                 else:
                     errors["base"] = "discovery_failed"
-            except Exception as ex:
-                _LOGGER.exception("discovery failed: %s", ex)
+            except Exception:  # pylint: disable= broad-except
+                _LOGGER.exception("discovery failed")
                 errors["base"] = "discovery_failed"
 
         devices = {
@@ -556,17 +568,6 @@ class LocalTuyaOptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_PRODUCT_NAME
                         )
                 if self.editing_device:
-                    if user_input[CONF_ENABLE_ADD_ENTITIES]:
-                        self.editing_device = False
-                        user_input[CONF_DEVICE_ID] = dev_id
-                        self.device_data.update(
-                            {
-                                CONF_DEVICE_ID: dev_id,
-                                CONF_DPS_STRINGS: self.dps_strings,
-                            }
-                        )
-                        return await self.async_step_pick_entity_type()
-
                     self.device_data.update(
                         {
                             CONF_DEVICE_ID: dev_id,
@@ -574,11 +575,6 @@ class LocalTuyaOptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_ENTITIES: [],
                         }
                     )
-                    if len(user_input[CONF_ENTITIES]) == 0:
-                        return self.async_abort(
-                            reason="no_entities",
-                            description_placeholders={},
-                        )
                     if user_input[CONF_ENTITIES]:
                         entity_ids = [
                             int(entity.split(":")[0])
@@ -600,29 +596,16 @@ class LocalTuyaOptionsFlowHandler(config_entries.OptionsFlow):
                 errors["base"] = "invalid_auth"
             except EmptyDpsList:
                 errors["base"] = "empty_dps"
-            except Exception as ex:
-                _LOGGER.exception("Unexpected exception: %s", ex)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
         defaults = {}
         if self.editing_device:
             # If selected device exists as a config entry, load config from it
             defaults = self.config_entry.data[CONF_DEVICES][dev_id].copy()
-            cloud_devs = self.hass.data[DOMAIN][DATA_CLOUD].device_list
-            placeholders = {"for_device": f" for device `{dev_id}`"}
-            if dev_id in cloud_devs:
-                cloud_local_key = cloud_devs[dev_id].get(CONF_LOCAL_KEY)
-                if defaults[CONF_LOCAL_KEY] != cloud_local_key:
-                    _LOGGER.info(
-                        "New local_key detected: new %s vs old %s",
-                        cloud_local_key,
-                        defaults[CONF_LOCAL_KEY],
-                    )
-                    defaults[CONF_LOCAL_KEY] = cloud_devs[dev_id].get(CONF_LOCAL_KEY)
-                    note = "\nNOTE: a new local_key has been retrieved using cloud API"
-                    placeholders = {"for_device": f" for device `{dev_id}`.{note}"}
-            defaults[CONF_ENABLE_ADD_ENTITIES] = False
             schema = schema_defaults(options_schema(self.entities), **defaults)
+            placeholders = {"for_device": f" for device `{dev_id}`"}
         else:
             defaults[CONF_PROTOCOL_VERSION] = "3.3"
             defaults[CONF_HOST] = ""
@@ -639,7 +622,7 @@ class LocalTuyaOptionsFlowHandler(config_entries.OptionsFlow):
                 if dev_id in cloud_devs:
                     defaults[CONF_LOCAL_KEY] = cloud_devs[dev_id].get(CONF_LOCAL_KEY)
                     defaults[CONF_FRIENDLY_NAME] = cloud_devs[dev_id].get(CONF_NAME)
-            schema = schema_defaults(DEVICE_SCHEMA, **defaults)
+            schema = schema_defaults(CONFIGURE_DEVICE_SCHEMA, **defaults)
 
             placeholders = {"for_device": ""}
 
@@ -661,6 +644,17 @@ class LocalTuyaOptionsFlowHandler(config_entries.OptionsFlow):
                 }
 
                 dev_id = self.device_data.get(CONF_DEVICE_ID)
+                if dev_id in self.config_entry.data[CONF_DEVICES]:
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry, data=config
+                    )
+                    return self.async_abort(
+                        reason="device_success",
+                        description_placeholders={
+                            "dev_name": config.get(CONF_FRIENDLY_NAME),
+                            "action": "updated",
+                        },
+                    )
 
                 new_data = self.config_entry.data.copy()
                 new_data[ATTR_UPDATED_AT] = str(int(time.time() * 1000))
@@ -743,7 +737,7 @@ class LocalTuyaOptionsFlowHandler(config_entries.OptionsFlow):
                     new_data = self.config_entry.data.copy()
                     entry_id = self.config_entry.entry_id
                     # removing entities from registry (they will be recreated)
-                    ent_reg = er.async_get(self.hass)
+                    ent_reg = await er.async_get_registry(self.hass)
                     reg_entities = {
                         ent.unique_id: ent.entity_id
                         for ent in er.async_entries_for_config_entry(ent_reg, entry_id)

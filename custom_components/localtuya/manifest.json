@@ -1,15 +1,14 @@
 {
   "domain": "localtuya",
-  "name": "LocalTuya integration for Comfortbilt devices",
+  "name": "LocalTuya integration",
+  "version": "4.2.1",
+  "documentation": "https://github.com/rospogrigio/localtuya/",
+  "dependencies": [],
   "codeowners": [
     "@rospogrigio", "@postlund", "@willemwouters", "@noahajac"
-    "@rospogrigio", "@postlund", "@willemwouters", "@noahajac"
   ],
-  "config_flow": true,
-  "dependencies": [],
-  "documentation": "https://github.com/noahajac/localtuya_comfortbilt/",
-  "iot_class": "local_push",
-  "issue_tracker": "https://github.com/noahajac/localtuya_comfortbilt/issues",
+  "issue_tracker": "https://github.com/noahajac/localtuya/issues",
   "requirements": [],
-  "version": "5.2.1"
+  "config_flow": true,
+  "iot_class": "local_push"
 }

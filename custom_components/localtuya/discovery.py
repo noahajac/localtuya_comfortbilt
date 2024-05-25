@@ -43,10 +43,10 @@ class TuyaDiscovery(asyncio.DatagramProtocol):
         """Start discovery by listening to broadcasts."""
         loop = asyncio.get_running_loop()
         listener = loop.create_datagram_endpoint(
-            lambda: self, local_addr=("0.0.0.0", 6666), reuse_port=True
+            lambda: self, local_addr=("0.0.0.0", 6666)
         )
         encrypted_listener = loop.create_datagram_endpoint(
-            lambda: self, local_addr=("0.0.0.0", 6667), reuse_port=True
+            lambda: self, local_addr=("0.0.0.0", 6667)
         )
 
         self._listeners = await asyncio.gather(listener, encrypted_listener)

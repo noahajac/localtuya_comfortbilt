@@ -8,7 +8,11 @@ import voluptuous as vol
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN,
-    CoverEntity, CoverEntityFeature,
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    SUPPORT_SET_POSITION,
+    SUPPORT_STOP,
+    CoverEntity,
 )
 
 from .common import LocalTuyaEntity, async_setup_entry
@@ -76,9 +80,9 @@ class LocaltuyaCover(LocalTuyaEntity, CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
         if self._config[CONF_POSITIONING_MODE] != COVER_MODE_NONE:
-            supported_features = supported_features | CoverEntityFeature.SET_POSITION
+            supported_features = supported_features | SUPPORT_SET_POSITION
         return supported_features
 
     @property
@@ -104,13 +108,13 @@ class LocaltuyaCover(LocalTuyaEntity, CoverEntity):
     def is_closed(self):
         """Return if the cover is closed or not."""
         if self._config[CONF_POSITIONING_MODE] == COVER_MODE_NONE:
-            return False
+            return None
 
         if self._current_cover_position == 0:
             return True
         if self._current_cover_position == 100:
             return False
-        return False
+        return None
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""

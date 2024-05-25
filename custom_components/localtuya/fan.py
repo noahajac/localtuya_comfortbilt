@@ -9,7 +9,10 @@ from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN,
-    FanEntity, FanEntityFeature,
+    SUPPORT_DIRECTION,
+    SUPPORT_OSCILLATE,
+    SUPPORT_SET_SPEED,
+    FanEntity,
 )
 from homeassistant.util.percentage import (
     int_states_in_range,
@@ -24,12 +27,12 @@ from .const import (
     CONF_FAN_DIRECTION,
     CONF_FAN_DIRECTION_FWD,
     CONF_FAN_DIRECTION_REV,
-    CONF_FAN_DPS_TYPE,
     CONF_FAN_ORDERED_LIST,
     CONF_FAN_OSCILLATING_CONTROL,
     CONF_FAN_SPEED_CONTROL,
     CONF_FAN_SPEED_MAX,
     CONF_FAN_SPEED_MIN,
+    CONF_FAN_DPS_TYPE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -191,13 +194,13 @@ class LocaltuyaFan(LocalTuyaEntity, FanEntity):
         features = 0
 
         if self.has_config(CONF_FAN_OSCILLATING_CONTROL):
-            features |= FanEntityFeature.OSCILLATE
+            features |= SUPPORT_OSCILLATE
 
         if self.has_config(CONF_FAN_SPEED_CONTROL):
-            features |= FanEntityFeature.SET_SPEED
+            features |= SUPPORT_SET_SPEED
 
         if self.has_config(CONF_FAN_DIRECTION):
-            features |= FanEntityFeature.DIRECTION
+            features |= SUPPORT_DIRECTION
 
         return features
 
