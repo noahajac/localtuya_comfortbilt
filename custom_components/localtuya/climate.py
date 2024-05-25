@@ -183,6 +183,7 @@ def flow_schema(dps):
         ),
         vol.Optional(CONF_HEURISTIC_ACTION): bool,
         vol.Optional(CONF_COMFORTBILT_FUNCTIONALITY): bool,
+        vol.Optional(CONF_COMFORTBILT_FUNCTIONALITY): bool,
     }
 
 
@@ -324,6 +325,8 @@ class LocaltuyaClimate(LocalTuyaEntity, ClimateEntity):
             presets.append(PRESET_ECO)
             if self._config.get(CONF_COMFORTBILT_FUNCTIONALITY, True):
                 presets.append(PRESET_NONE)
+            if self._config.get(CONF_COMFORTBILT_FUNCTIONALITY, True):
+                presets.append(PRESET_NONE)
         return presets
 
     @property
@@ -428,7 +431,18 @@ class LocaltuyaClimate(LocalTuyaEntity, ClimateEntity):
         else:
             if preset_mode == PRESET_ECO:
                     await self._device.set_dp(self._conf_eco_value, self._conf_eco_dp)
+        if self._config.get(CONF_COMFORTBILT_FUNCTIONALITY, True):
+            if preset_mode == PRESET_ECO:
+                await self._device.set_dp(True, self._conf_eco_dp)
+            else:
+                await self._device.set_dp(False, self._conf_eco_dp)
+        else:
+            if preset_mode == PRESET_ECO:
+                    await self._device.set_dp(self._conf_eco_value, self._conf_eco_dp)
             return
+            await self._device.set_dp(
+                self._conf_preset_set[preset_mode], self._conf_preset_dp
+            )
             await self._device.set_dp(
                 self._conf_preset_set[preset_mode], self._conf_preset_dp
             )
@@ -466,6 +480,8 @@ class LocaltuyaClimate(LocalTuyaEntity, ClimateEntity):
                 self.has_config(CONF_ECO_DP)
                 and self.dps_conf(CONF_ECO_DP) == self._conf_eco_value
             ):
+                self._preset_mode = PRESET_ECO
+            elif self._config.get(CONF_COMFORTBILT_FUNCTIONALITY, True) and self.dps_conf(CONF_ECO_DP) == True:
                 self._preset_mode = PRESET_ECO
             elif self._config.get(CONF_COMFORTBILT_FUNCTIONALITY, True) and self.dps_conf(CONF_ECO_DP) == True:
                 self._preset_mode = PRESET_ECO

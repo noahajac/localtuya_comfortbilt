@@ -3,6 +3,7 @@
   "name": "LocalTuya integration for Comfortbilt devices",
   "codeowners": [
     "@rospogrigio", "@postlund", "@willemwouters", "@noahajac"
+    "@rospogrigio", "@postlund", "@willemwouters", "@noahajac"
   ],
   "config_flow": true,
   "dependencies": [],
