@@ -1,5 +1,5 @@
 {
-  "domain": "localtuya",
+  "domain": "localtuya_comfortbilt",
   "name": "LocalTuya integration for Comfortbilt devices",
   "codeowners": [
     "@rospogrigio", "@postlund", "@willemwouters", "@noahajac"
